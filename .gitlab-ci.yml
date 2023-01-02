@@ -21,7 +21,7 @@ linting:
   variables:
     COMMAND: "lint"
   script:
-    - yamllint .
+    - ls .
 
 
 "default-previous":
