@@ -1,81 +1,85 @@
 ---
-image: "buluma/github-action-molecule:5.0.0"
+image: "ghcr.io/mullholland/docker-molecule-shell:latest"
+
+services:
+  - docker:dind
+
+stages:
+  - linting
+  - "default-previous"
+  - "default-current"
+  - "cluster-previous"
+  - "cluster-current"
 
 variables:
-  # DOCKER_HOST: "tcp://docker:2375"
+  DOCKER_HOST: "tcp://docker:2375"
   PY_COLORS: 1
+  ANSIBLE_FORCE_COLOR: 1
 
-molecule:
-  stage: build
-  allow_failure: true
+linting:
+  stage: linting
+  variables:
+    COMMAND: "lint"
   script:
-    - molecule test
+    - "command=${COMMAND} /opt/molecule.sh"
+
+
+"default-previous":
+  needs:
+    - "linting"
+  stage: "default-previous"
+  variables:
+    SCENARIO: "default"
+    ANSIBLE: "previous"
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "main"
+  parallel:
+    matrix:
+      - PLATFORM: [debian10, debian11, ubuntu1804, ubuntu2004, ubuntu2204, centos7, centos-stream8, amazonlinux, rockylinux8, almalinux8]  # yamllint disable-line rule:line-length
+  script:
+    - "scenario=${SCENARIO} ansible=${ANSIBLE} platform=${PLATFORM} /opt/molecule.sh"
+
+"default-current":
+  needs:
+    - "linting"
+  stage: "default-current"
+  variables:
+    SCENARIO: "default"
+    ANSIBLE: "current"
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "main"
+  parallel:
+    matrix:
+      - PLATFORM: [debian10, debian11, ubuntu1804, ubuntu2004, ubuntu2204, centos7, centos-stream8, amazonlinux, rockylinux8, almalinux8]  # yamllint disable-line rule:line-length
+  script:
+    - "scenario=${SCENARIO} ansible=${ANSIBLE} platform=${PLATFORM} /opt/molecule.sh"
+
+"cluster-previous":
+  needs:
+    - "linting"
+  stage: "cluster-previous"
+  variables:
+    SCENARIO: "cluster"
+    ANSIBLE: "previous"
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "main"
+  parallel:
+    matrix:
+      - PLATFORM: [debian10, debian11, ubuntu1804, ubuntu2004, ubuntu2204, centos7, centos-stream8, amazonlinux, rockylinux8, almalinux8]  # yamllint disable-line rule:line-length
+  script:
+    - "scenario=${SCENARIO} ansible=${ANSIBLE} platform=${PLATFORM} /opt/molecule.sh"
+
+"cluster-current":
+  needs:
+    - "linting"
+  stage: "cluster-current"
+  variables:
+    SCENARIO: "cluster"
+    ANSIBLE: "current"
   rules:
     - if: $CI_COMMIT_REF_NAME == "master"
-  retry: 1
   parallel:
     matrix:
-      - image: "alpine-openrc"
-        tag: "latest"
-      - image: "amazonlinux"
-        tag: "latest"
-      - image: "enterpriselinux"
-        tag: "8"
-      - image: "debian-systemd"
-        tag: "latest"
-      - image: "debian-systemd"
-        tag: "buster"
-      - image: "fedora-systemd"
-        tag: "35"
-      - image: "fedora-systemd"
-        tag: "latest"
-      - image: "fedora-systemd"
-        tag: "rawhide"
-      - image: "docker-opensuse-systemd"
-        tag: "latest"
-      - image: "docker-ubuntu-systemd"
-        tag: "latest"
-      - image: "docker-ubuntu-systemd"
-        tag: "bionic"
-      - image: "docker-ubuntu-systemd"
-        tag: "focal"
-      - image: "docker-ubuntu-systemd"
-        tag: "jammy"
-
-testing:
-  stage: test
-  needs: []
+      - PLATFORM: [debian10, debian11, ubuntu1804, ubuntu2004, ubuntu2204, centos7, centos-stream8, amazonlinux, rockylinux8, almalinux8]  # yamllint disable-line rule:line-length
   script:
-    - if [ -f tox.ini ] ; then tox ; fi
-    - if [ ! -f tox.ini ] ; then molecule test ; fi
-  rules:
-    - if: $CI_COMMIT_REF_NAME == "testing"
-  retry: 1
-  parallel:
-    matrix:
-      - image: "alpine-openrc"
-        tag: "latest"
-      - image: "amazonlinux"
-        tag: "latest"
-      - image: "enterpriselinux"
-        tag: "8"
-      - image: "debian-systemd"
-        tag: "latest"
-      - image: "debian-systemd"
-        tag: "buster"
-      - image: "fedora-systemd"
-        tag: "35"
-      - image: "fedora-systemd"
-        tag: "latest"
-      - image: "fedora-systemd"
-        tag: "rawhide"
-      - image: "docker-opensuse-systemd"
-        tag: "latest"
-      - image: "docker-ubuntu-systemd"
-        tag: "latest"
-      - image: "docker-ubuntu-systemd"
-        tag: "bionic"
-      - image: "docker-ubuntu-systemd"
-        tag: "focal"
-      - image: "docker-ubuntu-systemd"
-        tag: "jammy"
+    - "scenario=${SCENARIO} ansible=${ANSIBLE} platform=${PLATFORM} /opt/molecule.sh"
