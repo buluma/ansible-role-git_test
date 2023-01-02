@@ -1,3 +1,4 @@
+---
 molecule_scenarios:
   - scenario: "default"
     ansible: ["previous", "current"]
