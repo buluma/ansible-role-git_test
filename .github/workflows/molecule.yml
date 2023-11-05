@@ -6,6 +6,13 @@
 name: Ansible Molecule
 
 on:
+<<<<<<< HEAD
+=======
+  # Schedule updates (once weekly)
+  schedule:
+    - cron: '13 7 * * 3'
+  workflow_dispatch:
+>>>>>>> 7d7be5c2198dd15e01cdbf3e6d9e09721bc14859
   push:
     branches:
       - master
