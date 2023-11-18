@@ -1,4 +1,4 @@
-# [git_test](#git_test)
+# [Ansible role git_test](#git_test)
 
 Install and configure git_test on your system.
 
